@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>校园三维导览</title>
+
+  <!-- 断网检测（不依赖外部库，必须放在最前） -->
+  <style>
+    #net-tip {
+      display: none;
+      padding: 10px 16px;
+      background: #fff3cd;
+      color: #664d03;
+      text-align: center;
+      font-size: 14px;
+      border-bottom: 1px solid #ffecb5;
+      position: relative;
+      z-index: 9999;
+    }
+    #net-tip.show { display: block; }
+    #aframe-error {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: #fff;
+      z-index: 9998;
+      padding: 40px 20px;
+      text-align: center;
+    }
+    #aframe-error.show { display: block; }
+    #back-btn {
+      position: fixed;
+      top: 16px;
+      left: 16px;
+      z-index: 999;
+    }
+  </style>
+  <script>
+    function checkNet() {
+      var tip = document.getElementById("net-tip");
+      if (!tip) return;
+      if (navigator.onLine) tip.classList.remove("show");
+      else tip.classList.add("show");
+    }
+    window.addEventListener("online", checkNet);
+    window.addEventListener("offline", checkNet);
+    window.addEventListener("load", function () {
+      checkNet();
+      setTimeout(function () {
+        if (!window.AFRAME) {
+          document.getElementById("aframe-error").classList.add("show");
+        }
+      }, 1500);
+    });
+  </script>
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+</head>
+<body>
+  <div id="net-tip">当前网络已断开，三维场景可能无法加载，请检查网络连接。</div>
+  <a id="back-btn" class="btn btn-light btn-sm" href="../index.html">← 返回首页</a>
+
+  <div id="aframe-error">
+    <h3>三维场景加载失败</h3>
+    <p>可能是网络断开导致 A-Frame 库未能加载，请检查网络后刷新页面。</p>
+    <a class="btn btn-primary" href="../index.html">返回首页</a>
+  </div>
+
+  <a-scene>
+    <!-- 环境 -->
+    <a-sky color="#aee3f7"></a-sky>
+    <a-plane
+      position="0 0 -4" rotation="-90 0 0"
+      width="20" height="20" color="#7cb342">
+    </a-plane>
+
+    <!-- 主体：教学楼（方盒+屋顶） -->
+    <a-box position="0 1.2 -6" width="4" height="2.4" depth="2" color="#efeeee"></a-box>
+    <a-box position="0 2.7 -6" width="4.4" height="0.4" depth="2.4" color="#b71c1c"></a-box>
+
+    <!-- 旗杆与旗帜（旗帜带飘扬动画） -->
+    <a-cylinder position="3 1.8 -5" radius="0.05" height="3.6" color="#9e9e9e"></a-cylinder>
+    <a-box
+      position="3.35 3.3 -5" width="0.7" height="0.45" depth="0.03" color="#e53935"
+      animation="property: position; to: 3.4 3.3 -5; dir: alternate; dur: 900; loop: true">
+    </a-box>
+
+    <!-- 路灯：杆+发光球（点光源） -->
+    <a-cylinder position="-3 1.2 -4" radius="0.06" height="2.4" color="#616161"></a-cylinder>
+    <a-sphere position="-3 2.5 -4" radius="0.18" color="#fff59d"
+              animation="property: scale; to: 1.3 1.3 1.3; dir: alternate; dur: 1200; loop: true">
+    </a-sphere>
+    <a-light type="point" position="-3 2.6 -4" color="#fff59d" intensity="0.6"></a-light>
+
+    <!-- 环境光 -->
+    <a-light type="ambient" color="#ffffff" intensity="0.7"></a-light>
+
+    <!-- 相机初始位：稍远处平视校园 -->
+    <a-camera position="0 1.8 2"></a-camera>
+  </a-scene>
+</body>
+</html>
