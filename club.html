@@ -365,6 +365,55 @@
     }
 
     // ===== 5.可视化：柱状图 + 饼图 =====
+    function renderCharts() {
+      if (typeof Chart === "undefined") {
+        console.warn("Chart.js 未加载，跳过图表渲染");
+        return;
+      }
+      const labels = state.clubs.map(c => c.name);
+      const data = state.clubs.map(c =>
+        state.registrations.filter(r => r.clubId === c.id).length
+      );
+
+      // 柱状图
+      if (state.charts.bar) state.charts.bar.destroy();
+      state.charts.bar = new Chart(document.getElementById("barChart"), {
+        type: "bar",
+        data: {
+          labels: labels,
+          datasets: [{ label: "报名人数", data: data, backgroundColor: "#0d6efd" }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { title: { display: true, text: "各社团报名人数" }, legend: { display: false } },
+          scales: { y: { beginAtZero: true, title: { display: true, text: "人" } } }
+        }
+      });
+
+      // 饼图：按类别统计报名人数
+      const catMap = {};
+      state.clubs.forEach(c => {
+        const cnt = state.registrations.filter(r => r.clubId === c.id).length;
+        catMap[c.category] = (catMap[c.category] || 0) + cnt;
+      });
+      if (state.charts.pie) state.charts.pie.destroy();
+      state.charts.pie = new Chart(document.getElementById("pieChart"), {
+        type: "pie",
+        data: {
+          labels: Object.keys(catMap),
+          datasets: [{
+            data: Object.values(catMap),
+            backgroundColor: ["#0d6efd", "#198754", "#ffc107", "#dc3545", "#6f42c1"]
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { title: { display: true, text: "社团类别报名分布" } }
+        }
+      });
+    }
 
     // 启动
     checkNet();
