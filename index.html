@@ -4,13 +4,14 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>迷你版校园信息中心</title>
-  <!-- Bootstrap 5.3.3 CSS -->
+
   <link
     href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
     rel="stylesheet"
   />
-  <!-- 自定义 CSS -->
   <link rel="stylesheet" href="style.css" />
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body>
 
@@ -97,16 +98,37 @@
       </div>
     </section>
 
-    <!-- 自习室占位 -->
+    <!-- 自习室：楼层/开放状态筛选 -->
     <section id="study-room" class="mt-5">
       <h2>自习室</h2>
-      <p class="text-muted">自习室模块占位 · 待实现</p>
+      <div class="row g-2 mb-3">
+        <div class="col-auto">
+          <label class="form-label">楼层</label>
+          <select id="floorFilter" class="form-select form-select-sm">
+            <option value="all">全部</option>
+            <option value="1">1楼</option>
+            <option value="2">2楼</option>
+            <option value="3">3楼</option>
+          </select>
+        </div>
+        <div class="col-auto">
+          <label class="form-label">开放状态</label>
+          <select id="openFilter" class="form-select form-select-sm">
+            <option value="all">全部</option>
+            <option value="true">开放</option>
+            <option value="false">关闭</option>
+          </select>
+        </div>
+      </div>
+      <ul id="roomList" class="list-group"></ul>
     </section>
 
-    <!-- 统计占位 -->
+    <!-- 统计：各自习室使用量柱状图 -->
     <section id="stats" class="mt-5">
       <h2>统计</h2>
-      <p class="text-muted">统计模块占位 · 待实现</p>
+      <p class="mb-1"><strong>各自习室使用量</strong>（单位：人次）</p>
+      <p class="text-muted small">数据来源：data.json</p>
+      <canvas id="usageChart" height="120"></canvas>
     </section>
 
     <!-- 校园三维占位 -->
@@ -118,5 +140,66 @@
 
   <!-- Bootstrap JS Bundle（含 Popper，支持导航折叠） -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+  <script>
+    // ===== 自习室数据（写死在JS数组） =====
+    const rooms = [
+      { name: "A101", floor: 1, open: true },
+      { name: "A102", floor: 1, open: false },
+      { name: "B201", floor: 2, open: true },
+      { name: "B202", floor: 2, open: true },
+      { name: "C301", floor: 3, open: true },
+      { name: "C302", floor: 3, open: false }
+    ];
+
+    function renderRooms() {
+      const floor = document.getElementById("floorFilter").value;
+      const open = document.getElementById("openFilter").value;
+      const list = document.getElementById("roomList");
+      const filtered = rooms.filter(r =>
+        (floor === "all" || String(r.floor) === floor) &&
+        (open === "all" || String(r.open) === open)
+      );
+      list.innerHTML = filtered.map(r =>
+        `<li class="list-group-item d-flex justify-content-between">
+          <span>${r.name}（${r.floor}楼）</span>
+          <span class="${r.open ? 'text-success' : 'text-secondary'}">
+            ${r.open ? '开放' : '关闭'}
+          </span>
+        </li>`
+      ).join("") || '<li class="list-group-item text-muted">无匹配自习室</li>';
+    }
+
+    document.getElementById("floorFilter").addEventListener("change", renderRooms);
+    document.getElementById("openFilter").addEventListener("change", renderRooms);
+    renderRooms();
+
+    // ===== 统计图表：加载 data.json 渲染柱状图 =====
+    fetch("data.json")
+      .then(res => res.json())
+      .then(data => {
+        new Chart(document.getElementById("usageChart"), {
+          type: "bar",
+          data: {
+            labels: data.map(d => d.name),
+            datasets: [{
+              label: "使用量（人次）",
+              data: data.map(d => d.usage),
+              backgroundColor: "#0d6efd"
+            }]
+          },
+          options: {
+            plugins: {
+              title: { display: true, text: "各自习室使用量" },
+              legend: { display: false }
+            },
+            scales: {
+              y: { beginAtZero: true, title: { display: true, text: "人次" } }
+            }
+          }
+        });
+      })
+      .catch(err => console.error("加载 data.json 失败：", err));
+  </script>
 </body>
 </html>
